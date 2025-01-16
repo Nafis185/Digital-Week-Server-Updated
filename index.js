@@ -30,7 +30,7 @@ async function run() {
 
 
     const eventsCollection = client.db("DigitalWeek").collection("Events");
-    // const userCollection = client.db("DigitalWeek").collection("Events");
+    const registerCollection = client.db("DigitalWeek").collection("Registers"); 
 
 app.get('/Events', async (req, res) => {
   const cursor = eventsCollection.find();
@@ -45,12 +45,26 @@ app.get('/Events', async (req, res) => {
 
      const options = {
        // Include only the `title` and `imdb` fields in the returned document
-       projection: {  title: 1, price: 1, _id: 1  },
+       projection: {  title: 1, price: 1, service_id: 1  },
      };
 
     const result = await eventsCollection.findOne(query , options);
     res.send(result);
+    
   })
+
+
+  // registers creates
+  app.post ('/Registers', async (req, res) => {
+    const register = req.body;
+    console.log(register);
+    const result = await registerCollection.insertOne(register);
+    res.send(result);
+  });
+
+
+
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });

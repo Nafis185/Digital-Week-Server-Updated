@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
-// const cookieParser = require("cookie-parser");
+
 const cookieParser = require("cookie-parser");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
@@ -12,8 +12,14 @@ const port = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5173"],
-    credentials: true,
+    origin: 
+    // ["http://localhost:5173",
+    //  "http://localhost:5174"],
+   ["http://localhost:5173", 
+    "https://digital-week-62414.web.app",
+    "https://digital-week-62414.firebaseapp.com"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+   credentials: true,
   })
 );
 
@@ -84,11 +90,42 @@ console.log("token in the  middleware : " ,token );
   });
 };
 
+//from chatgpt 
+app.use((req, res, next) => {
+  res.header(
+    "Access-Control-Allow-Origin",
+    "https://digital-week-62414.web.app"
+  );
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+  );
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
+// chat gpt ends here
+
+const cookieOptions = {
+  httpOnly: true,
+
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+  secure: process.env.NODE_ENV === "production" ?  true : false ,
+  
+};
+
+
 
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     const eventsCollection = client.db("DigitalWeek").collection("Events");
     const registerCollection = client.db("DigitalWeek").collection("Registers");
@@ -100,23 +137,23 @@ async function run() {
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: "1h",
       });
-      // res
-      //   .cookie("token", token, {
-      //     httpOnly: true,
-      //     secure: false,
-      //   })
-      //   .send({ success: true });
-      res.cookie("token", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-      })
+     
+      res.cookie("token", token, cookieOptions
+      //   {
+      //   httpOnly: true,
+      //   secure: true,
+      //   sameSite: "none",
+      // }
+    )
       .send({ success: true });
     });
     app.post('/logout', (req, res) => {
       const user = req.body;
       console.log("logging out", user);
-      res.clearCookie('token', {maxAge: 0} ).send({ success: true });
+      // res.clearCookie('token', {maxAge: 0} ).send({ success: true });
+      res
+        .clearCookie("token", { ...cookieOptions, maxAge: 0 })
+        .send({ success: true });
     })
 
     // events related api
@@ -188,7 +225,7 @@ async function run() {
     });
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
@@ -209,3 +246,4 @@ app.listen(port, () => {
 
 
 // comments 
+
